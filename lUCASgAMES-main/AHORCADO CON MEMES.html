@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Ahorcado Memes - Lucas Games</title>
+  <style>
+    body { 
+      font-family: Arial, sans-serif; 
+      background: #111; 
+      color: #fff; 
+      text-align: center; 
+      margin: 0; 
+      padding: 20px;
+    }
+    #game { max-width: 600px; margin: 0 auto; }
+    #word { font-size: 3em; letter-spacing: 0.5em; margin: 40px 0; }
+    #letters { margin: 20px; }
+    button { 
+      font-size: 1.5em; margin: 5px; padding: 10px 15px; 
+      background: #333; color: white; border: 2px solid #555; cursor: pointer;
+    }
+    button:hover { background: #555; }
+    button:disabled { opacity: 0.4; cursor: not-allowed; }
+    #hangman { font-size: 8em; margin: 20px; min-height: 150px; }
+    #message { font-size: 2em; margin: 30px; color: #0f0; }
+  </style>
+</head>
+<body>
+  <div id="game">
+    <h1>¡Ahorcado Memes! 🪢😂</h1>
+    <div id="hangman"></div>
+    <div id="word"></div>
+    <div id="letters"></div>
+    <div id="message"></div>
+    <button onclick="newGame()">Jugar de nuevo</button>
+  </div>
+
+  <script>
+const words = [
+  "NO ME HAGAS REIR",
+  "QUE MIRAS BOBO",
+  "F EN EL CHAT",
+  "PAPI QUE",
+  "EL DE LA FOTO",
+  "SE VIENE EL DRAMA",
+  "MIERCOLES",
+  "TE LO DIJE",
+  "CHICA GAMER",
+  "SOY UN CRACK",
+  // ¡NUEVAS VIRALES 2026!
+  "2026 ES EL NUEVO 2016",
+  "2026 ES ABUNDANCIA",
+  "2026 ES MI AÑO",
+  "ENERO MES DE PRUEBA",
+  "MI 2026 EMPIEZA EN FEBRERO",
+  "FEBRERO EXCELENTE MES",
+  "EN FEBRERO SE VIENE EL HUMO",
+  "QUE TENGAS UN GRAN 2026",
+  "CRITICAS NO ME TOCAN",
+  "YA YA MIJO YA",
+  "PAGUEME CON SONRISAS",
+  "YO SOY LA MARCA",
+  "INSEGURA PERO DIOSA",
+  "SALVANDO 2026",
+  "2026 NO ES UN ANO MAS",
+  "PRIMER MEME DEL 2026",
+  "YA ES 2026",
+  "NECESITAMOS FRASES NUEVAS",
+  "MAROLIO CONCHA MADRE",
+  "MEJOR FOTO DEL 2026"
+];
+
+    let word = "";
+    let guessed = [];
+    let errors = 0;
+    const maxErrors = 6;
+
+    const hangmanParts = [
+      "", "O", "O\n|", "O\n|\\\n/", "O\n|\\", "O\n|/|\\", "O\n|/|\\"
+    ];
+
+    function pickWord() {
+      word = words[Math.floor(Math.random() * words.length)];
+      guessed = [];
+      errors = 0;
+    }
+
+    function displayWord() {
+      const display = word.split("").map(letter => 
+        guessed.includes(letter) || letter === " " ? letter : "_"
+      ).join(" ");
+      document.getElementById("word").textContent = display;
+    }
+
+    function updateHangman() {
+      document.getElementById("hangman").textContent = hangmanParts[errors];
+    }
+
+    function createKeyboard() {
+      const lettersDiv = document.getElementById("letters");
+      lettersDiv.innerHTML = "";
+      "ABCDEFGHIJKLMNÑOPQRSTUVWXYZ".split("").forEach(letter => {
+        const btn = document.createElement("button");
+        btn.textContent = letter;
+        btn.onclick = () => guess(letter);
+        lettersDiv.appendChild(btn);
+      });
+    }
+
+    function guess(letter) {
+      if (guessed.includes(letter)) return;
+      guessed.push(letter);
+
+      if (word.includes(letter)) {
+        displayWord();
+        checkWin();
+      } else {
+        errors++;
+        updateHangman();
+        if (errors >= maxErrors) {
+          document.getElementById("message").textContent = `¡Perdiste! Era: ${word}`;
+          disableKeyboard();
+        }
+      }
+    }
+
+    function checkWin() {
+      const revealed = word.split("").every(l => guessed.includes(l) || l === " ");
+      if (revealed) {
+        document.getElementById("message").textContent = "¡GANASTE! 🎉";
+        disableKeyboard();
+      }
+    }
+
+    function disableKeyboard() {
+      document.querySelectorAll("#letters button").forEach(b => b.disabled = true);
+    }
+
+    function newGame() {
+      pickWord();
+      displayWord();
+      updateHangman();
+      document.getElementById("message").textContent = "";
+      createKeyboard();
+    }
+
+    // Iniciar
+    newGame();
+  </script>
+<div style="position: fixed; bottom: 20px; right: 20px; z-index: 9999;">
+    <a href="index.html" style="background: linear-gradient(45deg, #00c6ff, #0072ff); color: white; border: none; padding: 12px 18px; border-radius: 25px; cursor: pointer; font-size: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); text-decoration: none; font-weight: bold;">🏠 Volver al Menú</a>
+</div>
+</body>
+
+</html>

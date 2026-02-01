@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Memory Memes - Lucas Games</title>
+  <style>
+    body { 
+      font-family: Arial, sans-serif; 
+      background: linear-gradient(135deg, #ff6b6b, #4ecdc4); 
+      color: #fff; 
+      text-align: center; 
+      margin: 0; padding: 20px;
+    }
+    #game { max-width: 600px; margin: 0 auto; }
+    h1 { font-size: 2.5em; text-shadow: 0 0 20px #fff; }
+    #board { 
+      display: grid; grid-template-columns: repeat(4, 1fr); 
+      gap: 10px; margin: 30px auto; max-width: 400px;
+    }
+    .card { 
+      width: 90px; height: 90px; background: #ff9ff3; 
+      border-radius: 15px; font-size: 3em; cursor: pointer; 
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.4s; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+      user-select: none;
+    }
+    .card.flipped { transform: rotateY(180deg); background: #54a0ff; }
+    .card.matched { background: #00b894; cursor: default; }
+    .card:hover:not(.matched):not(.flipped) { transform: scale(1.05); }
+    #info { font-size: 1.5em; margin: 20px; }
+    #message { font-size: 2em; margin: 20px; color: #f1c40f; }
+    button { padding: 12px 30px; font-size: 1.2em; background: #00b894; color: white; border: none; border-radius: 8px; cursor: pointer; margin: 10px; }
+    button:hover { background: #00a085; }
+  </style>
+</head>
+<body>
+  <div id="game">
+    <h1>🧠 Memory Memes 😂</h1>
+    <p style="font-size:1.3em; opacity:0.9;">¡Encuentra los pares virales de 2026! 💀🔘</p>
+    <div id="info">
+      Movidas: <span id="moves">0</span> | 
+      Tiempo: <span id="time">0</span>s | 
+      High: <span id="high">∞</span>s
+    </div>
+    <div id="board"></div>
+    <div id="message"></div>
+    <button onclick="newGame()">🔄 Nueva Partida</button>
+  </div>
+
+  <script>
+    const emojis = ['💀','🔘','🪢','👀','🤪','📅','2️⃣','0️⃣','🔥','😂','🦅','⚡','🧲','🎉','🚀','🌟']; // Virales: Esqueleto, Botón365, Ahorcado, etc.
+    let board = [];
+    let flipped = [];
+    let matched = 0;
+    let moves = 0;
+    let time = 0;
+    let gameOver = false;
+    let timer;
+
+    function shuffle(array) {
+      return array.sort(() => Math.random() - 0.5);
+    }
+
+    function initBoard() {
+      const pairs = shuffle([...emojis.slice(0,8), ...emojis.slice(0,8)]); // 16 cartas, 8 pares
+      board = pairs;
+      flipped = [];
+      matched = 0;
+      moves = 0;
+      time = 0;
+      gameOver = false;
+      clearInterval(timer);
+      updateDisplay();
+      createBoard();
+    }
+
+    function createBoard() {
+      const boardEl = document.getElementById('board');
+      boardEl.innerHTML = '';
+      board.forEach((emoji, i) => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.dataset.index = i;
+        card.onclick = () => flipCard(i);
+        boardEl.appendChild(card);
+      });
+    }
+
+    function flipCard(index) {
+      if (flipped.length === 2 || gameOver || board[index] === 'matched') return;
+      const card = document.querySelector(`[data-index="${index}"]`);
+      card.classList.add('flipped');
+      card.textContent = board[index];
+      flipped.push(index);
+
+      if (flipped.length === 2) {
+        moves++;
+        setTimeout(checkMatch, 800);
+      }
+      updateDisplay();
+    }
+
+    function checkMatch() {
+      const [i1, i2] = flipped;
+      if (board[i1] === board[i2]) {
+        document.querySelector(`[data-index="${i1}"]`).classList.add('matched');
+        document.querySelector(`[data-index="${i2}"]`).classList.add('matched');
+        board[i1] = board[i2] = 'matched';
+        matched += 2;
+        if (matched === 16) {
+          gameOver = true;
+          const high = localStorage.getItem('memoryHigh') || 9999;
+          if (time < high) localStorage.setItem('memoryHigh', time);
+          document.getElementById('message').textContent = `¡GANASTE! 🎉 ${time}s (High: ${Math.min(time, high)}s)`;
+        }
+      } else {
+        document.querySelector(`[data-index="${flipped[0]}"]`).classList.remove('flipped');
+        document.querySelector(`[data-index="${flipped[1]}"]`).classList.remove('flipped');
+        document.querySelector(`[data-index="${flipped[0]}"]`).textContent = '';
+        document.querySelector(`[data-index="${flipped[1]}"]`).textContent = '';
+      }
+      flipped = [];
+    }
+
+    function updateDisplay() {
+      document.getElementById('moves').textContent = moves;
+      document.getElementById('time').textContent = time;
+      const high = localStorage.getItem('memoryHigh') || '∞';
+      document.getElementById('high').textContent = high;
+    }
+
+    function newGame() {
+      initBoard();
+      document.getElementById('message').textContent = '';
+      timer = setInterval(() => {
+        if (!gameOver) {
+          time++;
+          updateDisplay();
+        }
+      }, 1000);
+    }
+
+    // Start
+    newGame();
+  </script>
+<div style="position: fixed; bottom: 20px; right: 20px; z-index: 9999;">
+    <a href="index.html" style="background: linear-gradient(45deg, #00c6ff, #0072ff); color: white; border: none; padding: 12px 18px; border-radius: 25px; cursor: pointer; font-size: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); text-decoration: none; font-weight: bold;">🏠 Volver al Menú</a>
+</div>
+</body>
+</html>
