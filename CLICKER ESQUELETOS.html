@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Clicker Esqueletos - Lucas Games</title>
+  <style>
+    body { 
+      font-family: 'Arial Black', sans-serif; 
+      background: linear-gradient(135deg, #1a0033, #000); 
+      color: #fff; 
+      text-align: center; 
+      margin: 0; padding: 20px;
+      overflow-x: hidden;
+    }
+    #game { max-width: 600px; margin: 0 auto; }
+    h1 { font-size: 2.5em; text-shadow: 0 0 20px #ff00ff; margin-bottom: 10px; }
+    #coins { font-size: 4em; margin: 20px 0; text-shadow: 0 0 30px #00ff00; }
+    #clickBtn { 
+      font-size: 5em; width: 200px; height: 200px; border-radius: 50%; 
+      border: 5px solid #ff00ff; background: rgba(255,0,255,0.2); color: #fff; 
+      cursor: pointer; transition: all 0.1s; box-shadow: 0 0 50px #ff00ff;
+    }
+    #clickBtn:active { transform: scale(0.95); box-shadow: 0 0 100px #00ff00; }
+    #cps { font-size: 1.8em; color: #00ff88; margin: 20px 0; }
+    .upgrade { 
+      display: inline-block; width: 280px; margin: 10px; padding: 15px; 
+      background: rgba(0,255,0,0.1); border: 2px solid #00ff00; border-radius: 10px; 
+      cursor: pointer; transition: all 0.2s; font-size: 1.2em;
+    }
+    .upgrade:hover { background: rgba(0,255,0,0.3); transform: scale(1.05); }
+    .upgrade.affordable { box-shadow: 0 0 20px #00ff00; }
+    .upgrade.cant-afford { opacity: 0.5; cursor: not-allowed; }
+    #saveStatus { font-size: 1em; color: #aaa; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <div id="game">
+    <h1>💀 Clicker Esqueletos 🖱️</h1>
+    <p style="font-size:1.3em; opacity:0.9;">¡Clickea para ABUNDANCIA 2026! 💀🔥</p>
+    <div id="coins">0</div>
+    <button id="clickBtn" onclick="clickCoin()">💀</button>
+    <div id="cps">Por segundo: 0</div>
+    <div id="upgrades"></div>
+    <div id="saveStatus"></div>
+  </div>
+
+  <script>
+    let coins = 0;
+    let cps = 0;
+    const upgrades = [
+      {id: 'cursor', name: '👆 Cursor', baseCost: 15, cps: 0.1, owned: 0},
+      {id: 'esqueleto', name: '💀 Esqueleto Sonriente', baseCost: 100, cps: 1, owned: 0},
+      {id: 'boton365', name: '🔘 Botón 365', baseCost: 1100, cps: 8, owned: 0},
+      {id: 'abundancia', name: '💰 Abundancia 2026', baseCost: 12000, cps: 47, owned: 0},
+      {id: 'nuevo2016', name: '🔄 2026 = Nuevo 2016', baseCost: 130000, cps: 260, owned: 0}
+    ];
+
+    function loadGame() {
+      const save = localStorage.getItem('clickerEsqueletos');
+      if (save) {
+        const data = JSON.parse(save);
+        coins = data.coins || 0;
+        upgrades.forEach((up, i) => {
+          up.owned = data.upgrades[i] || 0;
+        });
+        updateCPS();
+      }
+    }
+
+    function saveGame() {
+      const data = {
+        coins,
+        upgrades: upgrades.map(up => up.owned)
+      };
+      localStorage.setItem('clickerEsqueletos', JSON.stringify(data));
+      document.getElementById('saveStatus').textContent = '💾 Guardado!';
+      setTimeout(() => { document.getElementById('saveStatus').textContent = ''; }, 2000);
+    }
+
+    function clickCoin() {
+      coins += 1;
+      updateDisplay();
+    }
+
+    function getCost(up) {
+      return Math.floor(up.baseCost * Math.pow(1.15, up.owned));
+    }
+
+    function buyUpgrade(id) {
+      const up = upgrades.find(u => u.id === id);
+      const cost = getCost(up);
+      if (coins >= cost) {
+        coins -= cost;
+        up.owned++;
+        updateCPS();
+        updateDisplay();
+        saveGame();
+      }
+    }
+
+    function updateCPS() {
+      cps = upgrades.reduce((total, up) => total + (up.owned * up.cps), 0);
+    }
+
+    function updateDisplay() {
+      document.getElementById('coins').textContent = Math.floor(coins);
+      document.getElementById('cps').textContent = `Por segundo: ${cps.toFixed(1)} 💀/s`;
+
+      const upgradesDiv = document.getElementById('upgrades');
+      upgradesDiv.innerHTML = '';
+      upgrades.forEach(up => {
+        const cost = getCost(up);
+        const btn = document.createElement('div');
+        btn.className = `upgrade ${coins >= cost ? 'affordable' : 'cant-afford'}`;
+        btn.innerHTML = `${up.name}<br>Owned: ${up.owned}<br>Cost: ${cost.toLocaleString()}<br>+${up.cps}/s`;
+        btn.onclick = () => buyUpgrade(up.id);
+        upgradesDiv.appendChild(btn);
+      });
+    }
+
+    // Auto CPS
+    setInterval(() => {
+      coins += cps / 10; // 10 ticks/sec
+      updateDisplay();
+    }, 100);
+
+    // Save every 5s
+    setInterval(saveGame, 5000);
+
+    // Init
+    loadGame();
+    updateDisplay();
+    saveGame();
+  </script>
+<div style="position: fixed; bottom: 20px; right: 20px; z-index: 9999;">
+    <a href="index.html" style="background: linear-gradient(45deg, #00c6ff, #0072ff); color: white; border: none; padding: 12px 18px; border-radius: 25px; cursor: pointer; font-size: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); text-decoration: none; font-weight: bold;">🏠 Volver al Menú</a>
+</div>
+</body>
+</html>
